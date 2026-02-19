@@ -1,4 +1,4 @@
-FROM chocobozzz/peertube:v8.0.2
+FROM chocobozzz/peertube:production
 ENV DPKG_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     mesa-va-drivers \
