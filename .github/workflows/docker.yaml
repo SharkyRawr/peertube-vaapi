@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - "v*"
+      - "production"
   workflow_dispatch:
   schedule:
     - cron: "17 6 * * *"
@@ -19,7 +19,8 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  UPSTREAM_RELEASE_REPO: chocobozzz/PeerTube
+  UPSTREAM_DOCKERHUB_REPO: chocobozzz/peertube
+  UPSTREAM_DOCKERHUB_TAG: production
 
 jobs:
   docker:
@@ -45,29 +46,32 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Resolve latest upstream release tag
+      - name: Resolve upstream Docker Hub tag digest
         if: github.event_name == 'schedule'
         id: upstream
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const [owner, repo] = process.env.UPSTREAM_RELEASE_REPO.split("/");
-            const release = await github.rest.repos.getLatestRelease({ owner, repo });
-            core.info(`Latest upstream release: ${release.data.tag_name}`);
-            core.setOutput("tag", release.data.tag_name);
+        run: |
+          set -euo pipefail
+          endpoint="https://hub.docker.com/v2/repositories/${UPSTREAM_DOCKERHUB_REPO}/tags/${UPSTREAM_DOCKERHUB_TAG}"
+          digest="$(curl -fsSL "$endpoint" | jq -r '.digest // empty')"
+          if [ -z "$digest" ]; then
+            echo "Failed to resolve digest for ${UPSTREAM_DOCKERHUB_REPO}:${UPSTREAM_DOCKERHUB_TAG}" >&2
+            exit 1
+          fi
+          echo "Upstream digest: $digest"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
       - name: Create upstream marker file
         if: github.event_name == 'schedule'
         run: |
-          echo "${{ steps.upstream.outputs.tag }}" > .upstream-release-marker
+          echo "${{ steps.upstream.outputs.digest }}" > .upstream-release-marker
 
-      - name: Restore upstream release cache marker
+      - name: Restore upstream image cache marker
         if: github.event_name == 'schedule'
         id: upstream_cache
         uses: actions/cache@v4
         with:
           path: .upstream-release-marker
-          key: upstream-release-${{ steps.upstream.outputs.tag }}
+          key: upstream-image-${{ steps.upstream.outputs.digest }}
 
       - name: Extract Docker metadata
         id: meta
@@ -79,7 +83,7 @@ jobs:
             type=ref,event=tag
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=upstream-${{ steps.upstream.outputs.tag }},enable=${{ github.event_name == 'schedule' }}
+            type=raw,value=upstream-production,enable=${{ github.event_name == 'schedule' }}
 
       - name: Build and push Docker image
         if: github.event_name != 'schedule' || steps.upstream_cache.outputs.cache-hit != 'true'

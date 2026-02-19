@@ -38,9 +38,9 @@ This repository includes a GitHub Actions workflow at `.github/workflows/docker.
 ### Triggers
 
 - Push to `main`
-- Push tags matching `v*`
+- Push tags matching `production`
 - Manual trigger via `workflow_dispatch`
-- Scheduled polling every 6 hours checks latest release from `chocobozzz/PeerTube` and builds only when a new upstream tag appears
+- Scheduled polling checks Docker Hub tag `chocobozzz/peertube:production` and builds only when its digest changes
 
 ## License
 
