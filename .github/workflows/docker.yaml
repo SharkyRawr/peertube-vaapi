@@ -83,7 +83,7 @@ jobs:
             type=ref,event=tag
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=upstream-production,enable=${{ github.event_name == 'schedule' }}
+            type=raw,value=production
 
       - name: Build and push Docker image
         if: github.event_name != 'schedule' || steps.upstream_cache.outputs.cache-hit != 'true'
