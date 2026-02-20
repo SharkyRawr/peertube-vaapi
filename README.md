@@ -8,7 +8,7 @@ Base image: `chocobozzz/peertube:production`
 
 - `mesa-va-drivers`
 - `vainfo`
-- `@lunacode/peertube-plugin-hardware-transcode-vaapi`
+- `@lunacode/peertube-plugin-hardware-transcode-vaapi` (auto-installed on container startup)
 
 These additions are layered on top of the official PeerTube image to support VA-API hardware acceleration in compatible environments.
 
@@ -25,6 +25,8 @@ docker run --rm -it peertube-vaapi vainfo
 ```
 
 You may need to pass GPU devices and/or container runtime flags depending on your host setup.
+
+The plugin is installed when the container starts (not during `docker build`), because PeerTube plugin installation requires a live database connection.
 
 ## GitHub Container Registry publishing
 
