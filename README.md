@@ -8,8 +8,9 @@ Base image: `chocobozzz/peertube:production`
 
 - `mesa-va-drivers`
 - `vainfo`
+- `@lunacode/peertube-plugin-hardware-transcode-vaapi`
 
-These packages are added on top of the official PeerTube image to support VA-API hardware acceleration in compatible environments.
+These additions are layered on top of the official PeerTube image to support VA-API hardware acceleration in compatible environments.
 
 ## Build locally
 
