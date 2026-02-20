@@ -8,7 +8,7 @@ Base image: `chocobozzz/peertube:production`
 
 - `mesa-va-drivers`
 - `vainfo`
-- `@lunacode/peertube-plugin-hardware-transcode-vaapi` (auto-installed on container startup)
+- `peertube-plugin-lunacode-vaapi` (auto-installed on container startup)
 
 These additions are layered on top of the official PeerTube image to support VA-API hardware acceleration in compatible environments.
 

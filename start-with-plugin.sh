@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-PLUGIN_NAME='@lunacode/peertube-plugin-hardware-transcode-vaapi'
+PLUGIN_NAME='peertube-plugin-lunacode-vaapi'
 
 # Install the plugin once the container starts (DB is available here, unlike build time).
 if npm run plugin:list 2>/dev/null | grep -Fq "$PLUGIN_NAME"; then
