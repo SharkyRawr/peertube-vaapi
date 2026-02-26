@@ -74,6 +74,7 @@ jobs:
           key: upstream-image-${{ steps.upstream.outputs.digest }}
 
       - name: Extract Docker metadata
+        if: github.event_name != 'schedule' || steps.upstream_cache.outputs.cache-hit != 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
