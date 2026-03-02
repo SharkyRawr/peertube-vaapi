@@ -1,11 +1,10 @@
 FROM chocobozzz/peertube:production
 ENV DPKG_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     mesa-va-drivers \
-    vainfo \
-    && apt clean \
-    && rm -rf /var/lib/apt/lists/*
+    vainfo
 
-COPY start-with-plugin.sh /usr/local/bin/start-with-plugin.sh
-RUN chmod +x /usr/local/bin/start-with-plugin.sh
+COPY --chmod=755 start-with-plugin.sh /usr/local/bin/start-with-plugin.sh
 CMD ["/usr/local/bin/start-with-plugin.sh"]
