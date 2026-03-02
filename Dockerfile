@@ -3,6 +3,7 @@ ENV DPKG_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     mesa-va-drivers \
     vainfo \
+    && apt clean \
     && rm -rf /var/lib/apt/lists/*
 
 COPY start-with-plugin.sh /usr/local/bin/start-with-plugin.sh
