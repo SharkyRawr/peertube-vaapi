@@ -62,11 +62,12 @@ jobs:
           fi
           echo "Upstream digest: $digest"
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          safe_digest="${digest//[^a-zA-Z0-9._-]/-}"
+          echo "safe_digest=$safe_digest" >> "$GITHUB_OUTPUT"
 
       - name: Create upstream marker file
         if: github.event_name == 'schedule'
-        run: |
-          echo "${{ steps.upstream.outputs.digest }}" > .upstream-release-marker
+        run: echo "${{ steps.upstream.outputs.digest }}" > .upstream-release-marker
 
       - name: Restore upstream image cache marker
         if: github.event_name == 'schedule'
@@ -74,7 +75,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .upstream-release-marker
-          key: upstream-image-${{ steps.upstream.outputs.digest }}
+          key: upstream-image-${{ steps.upstream.outputs.safe_digest }}
 
       - name: Extract Docker metadata
         if: github.event_name != 'schedule' || steps.upstream_cache.outputs.cache-hit != 'true'
