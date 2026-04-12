@@ -36,21 +36,7 @@ jobs:
       - name: Lowercase image name
         run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Resolve upstream Docker Hub tag digest
-        if: github.event_name == 'schedule'
         id: upstream
         run: |
           set -euo pipefail
@@ -62,23 +48,48 @@ jobs:
           fi
           echo "Upstream digest: $digest"
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
-          safe_digest="${digest//[^a-zA-Z0-9._-]/-}"
-          echo "safe_digest=$safe_digest" >> "$GITHUB_OUTPUT"
 
-      - name: Create upstream marker file
-        if: github.event_name == 'schedule'
-        run: echo "${{ steps.upstream.outputs.digest }}" > .upstream-release-marker
+      - name: Compute build input fingerprint
+        id: fingerprint
+        run: |
+          set -euo pipefail
+          {
+            printf 'upstream=%s\n' "${{ steps.upstream.outputs.digest }}"
+            sha256sum Dockerfile start-with-plugin.sh
+          } | sha256sum | awk '{print "fingerprint="$1}' >> "$GITHUB_OUTPUT"
 
-      - name: Restore upstream image cache marker
-        if: github.event_name == 'schedule'
-        id: upstream_cache
+      - name: Create build input marker file
+        run: echo "${{ steps.fingerprint.outputs.fingerprint }}" > .build-inputs-marker
+
+      - name: Restore build input cache marker
+        id: build_inputs_cache
         uses: actions/cache@v4
         with:
-          path: .upstream-release-marker
-          key: upstream-image-${{ steps.upstream.outputs.safe_digest }}
+          path: .build-inputs-marker
+          key: build-inputs-${{ steps.fingerprint.outputs.fingerprint }}
+
+      - name: Skip unchanged image build
+        if: steps.build_inputs_cache.outputs.cache-hit == 'true'
+        run: echo "Skipping image build because the upstream base image and local build inputs are unchanged."
+
+      - name: Set up QEMU
+        if: steps.build_inputs_cache.outputs.cache-hit != 'true'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        if: steps.build_inputs_cache.outputs.cache-hit != 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: steps.build_inputs_cache.outputs.cache-hit != 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract Docker metadata
-        if: github.event_name != 'schedule' || steps.upstream_cache.outputs.cache-hit != 'true'
+        if: steps.build_inputs_cache.outputs.cache-hit != 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -91,7 +102,7 @@ jobs:
             type=raw,value=production
 
       - name: Build and push Docker image
-        if: github.event_name != 'schedule' || steps.upstream_cache.outputs.cache-hit != 'true'
+        if: steps.build_inputs_cache.outputs.cache-hit != 'true'
         id: build
         uses: docker/build-push-action@v6
         with:
@@ -111,7 +122,7 @@ jobs:
           sbom: true
 
       - name: Generate build attestation
-        if: github.event_name != 'schedule' || steps.upstream_cache.outputs.cache-hit != 'true'
+        if: steps.build_inputs_cache.outputs.cache-hit != 'true'
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
