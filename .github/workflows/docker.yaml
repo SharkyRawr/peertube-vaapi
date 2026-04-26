@@ -150,4 +150,3 @@ jobs:
         with:
           subject-name: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}
           subject-digest: ${{ steps.build.outputs.digest }}
-          push-to-registry: true
