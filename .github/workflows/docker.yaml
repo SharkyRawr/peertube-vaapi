@@ -136,10 +136,18 @@ jobs:
           provenance: mode=max
           sbom: true
 
-      - name: Generate build attestation
+      - name: Generate build attestation (GHCR)
         if: steps.build_inputs_cache.outputs.cache-hit != 'true' || inputs.force_rebuild
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      - name: Generate build attestation (Docker Hub)
+        if: steps.build_inputs_cache.outputs.cache-hit != 'true' || inputs.force_rebuild
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
