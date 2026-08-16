@@ -6,11 +6,13 @@ Base image: `chocobozzz/peertube:production`
 
 ## What this image adds
 
+- `intel-media-va-driver-non-free` (`amd64` only, via enabled Debian `non-free` repository)
+- `va-driver-all`
 - `mesa-va-drivers`
 - `vainfo`
 - [`peertube-plugin-lunacode-vaapi`](https://www.npmjs.com/package/peertube-plugin-lunacode-vaapi) (the sister plugin to this Docker image, auto-installed on container startup)
 
-These additions are layered on top of the official PeerTube image to support VA-API hardware acceleration in compatible environments.
+These additions are layered on top of the official PeerTube image to support VA-API hardware acceleration across Intel, AMD, and other compatible GPU environments.
 
 ## Build locally
 
