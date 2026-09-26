@@ -1,18 +1,21 @@
 # peertube-vaapi
 
-PeerTube Docker image with VA-API userspace packages preinstalled.
+PeerTube Docker image with codec libraries and hardware acceleration userspace packages preinstalled.
 
 Base image: `chocobozzz/peertube:production`
 
 ## What this image adds
 
-- `intel-media-va-driver-non-free` (`amd64` only, via enabled Debian `non-free` repository)
-- `va-driver-all`
-- `mesa-va-drivers`
-- `vainfo`
+- Intel media: `intel-media-va-driver-non-free`, `libvpl-tools`, `libmfx-gen1.2` (`amd64` only; the non-free driver uses Debian's `non-free` repository)
+- VA-API: `va-driver-all`, `mesa-va-drivers`, `vainfo`
+- V4L2: `v4l-utils`
+- Vulkan: `mesa-vulkan-drivers`, `vulkan-tools`
+- OpenCL: `mesa-opencl-icd`, `clinfo`
+- FFmpeg libraries: `libavcodec-extra`, `libavformat-extra`, `libavfilter-extra`
+- NVIDIA container runtime capabilities: `NVIDIA_DRIVER_CAPABILITIES=video,compute,utility`
 - [`peertube-plugin-lunacode-vaapi`](https://www.npmjs.com/package/peertube-plugin-lunacode-vaapi) (the sister plugin to this Docker image, auto-installed on container startup)
 
-These additions are layered on top of the official PeerTube image to support VA-API hardware acceleration across Intel, AMD, and other compatible GPU environments.
+These additions are layered on top of the official PeerTube image to broaden codec and hardware acceleration support. Available acceleration depends on the host GPU, drivers, and devices passed to the container; the NVIDIA capabilities setting applies when using the NVIDIA container runtime.
 
 ## Build locally
 
